@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/karapetianash/todo-cli"
 	"net/http"
 	"strconv"
 	"sync"
+
+	"github.com/karapetianash/todo-cli"
 )
 
 var (
@@ -46,7 +47,7 @@ func todoRouter(todoFile string, l sync.Locker) http.HandlerFunc {
 				addHandler(w, r, list, todoFile)
 			default:
 				message := "Method not supported"
-				replyError(w, r, http.StatusInternalServerError, message)
+				replyError(w, r, http.StatusMethodNotAllowed, message)
 			}
 			return
 		}
@@ -54,11 +55,12 @@ func todoRouter(todoFile string, l sync.Locker) http.HandlerFunc {
 		id, err := validateID(r.URL.Path, list)
 		if err != nil {
 			if errors.Is(err, ErrNoFound) {
-				replyError(w, r, http.StatusInternalServerError, ErrNoFound.Error())
+				replyError(w, r, http.StatusNotFound, err.Error())
 				return
 			}
 
-			replyError(w, r, http.StatusInternalServerError, err.Error())
+			replyError(w, r, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		switch r.Method {
@@ -70,7 +72,7 @@ func todoRouter(todoFile string, l sync.Locker) http.HandlerFunc {
 			pathHandler(w, r, list, id, todoFile)
 		default:
 			message := "Method not supported"
-			replyError(w, r, http.StatusInternalServerError, message)
+			replyError(w, r, http.StatusMethodNotAllowed, message)
 		}
 	}
 }
@@ -129,8 +131,8 @@ func addHandler(w http.ResponseWriter, r *http.Request, list *todo.List, todoFil
 		Task string `json:"task"`
 	}{}
 
-	if err := json.NewDecoder(r.Body); err != nil {
-		message := fmt.Sprintf("Invalid JSON: %s", err)
+	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+		message := fmt.Sprintf("Invalid JSON: %v", err)
 		replyError(w, r, http.StatusBadRequest, message)
 		return
 	}
