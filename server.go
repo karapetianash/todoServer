@@ -21,6 +21,7 @@ func newMux(todoFile string) http.Handler {
 	return m
 }
 
+// replyTextContent replies with text content
 func replyTextContent(w http.ResponseWriter, r *http.Request, status int, content string) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(status)

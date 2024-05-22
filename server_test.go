@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/karapetianash/todo-cli"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/karapetianash/todo-cli"
 )
 
 func setupAPI(t *testing.T) (string, func()) {
@@ -84,7 +85,7 @@ func TestGet(t *testing.T) {
 					TotalResults int       `json:"total_results"`
 				}
 
-				body = []byte{}
+				body = make([]byte, 0)
 				err  error
 			)
 

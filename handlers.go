@@ -12,10 +12,11 @@ import (
 )
 
 var (
-	ErrNoFound     = errors.New("not found")
+	ErrNotFound    = errors.New("not found")
 	ErrInvalidData = errors.New("invalid data")
 )
 
+// rootHandler handles requests to the server root
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		replyError(w, r, http.StatusNotFound, "")
@@ -54,7 +55,7 @@ func todoRouter(todoFile string, l sync.Locker) http.HandlerFunc {
 
 		id, err := validateID(r.URL.Path, list)
 		if err != nil {
-			if errors.Is(err, ErrNoFound) {
+			if errors.Is(err, ErrNotFound) {
 				replyError(w, r, http.StatusNotFound, err.Error())
 				return
 			}
@@ -69,7 +70,7 @@ func todoRouter(todoFile string, l sync.Locker) http.HandlerFunc {
 		case http.MethodDelete:
 			deleteHandler(w, r, list, id, todoFile)
 		case http.MethodPatch:
-			pathHandler(w, r, list, id, todoFile)
+			patchHandler(w, r, list, id, todoFile)
 		default:
 			message := "Method not supported"
 			replyError(w, r, http.StatusMethodNotAllowed, message)
@@ -107,7 +108,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id i
 }
 
 // patchHandler completes a specific item
-func pathHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id int, todoFile string) {
+func patchHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id int, todoFile string) {
 	q := r.URL.Query()
 
 	if _, ok := q["complete"]; !ok {
@@ -132,7 +133,7 @@ func addHandler(w http.ResponseWriter, r *http.Request, list *todo.List, todoFil
 	}{}
 
 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
-		message := fmt.Sprintf("Invalid JSON: %v", err)
+		message := fmt.Sprintf("Invalid JSON: %s", err)
 		replyError(w, r, http.StatusBadRequest, message)
 		return
 	}
@@ -158,7 +159,7 @@ func validateID(path string, list *todo.List) (int, error) {
 	}
 
 	if id > len(*list) {
-		return id, fmt.Errorf("%w: ID %d not found", ErrNoFound, id)
+		return id, fmt.Errorf("%w: ID %d not found", ErrNotFound, id)
 	}
 
 	return id, nil

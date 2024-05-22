@@ -23,6 +23,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
+	// TODO: graceful stop
 	if err := s.ListenAndServe(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
